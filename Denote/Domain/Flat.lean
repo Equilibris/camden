@@ -47,21 +47,21 @@ attribute [simp] Flat.Le.bot_obj
 attribute [simp] Flat.Le.bot_bot
 attribute [simp] Flat.Le.bot
 
-@[simp]
+@[simp, grind =]
 theorem obj_a_le_obj_b_eq {a b : α} : (Flat.obj a ≤ .obj b) = (a = b) := by
   apply propext
   constructor
   · rintro (_|_); rfl
   · rintro rfl; rfl
 
-@[simp]
+@[simp, grind =]
 theorem obj_a_le_bot {a : α} : (Flat.obj a ≤ .bot) = False := by
   apply propext
   constructor
   · rintro (_|_)
   · exact False.elim
 
-@[simp]
+@[simp, grind =]
 theorem obj_le_eq {v} : {f : Flat α} → (.obj v ≤ f) = (.obj v = f)
   | .obj _  => by simp
   | .bot    => by simp

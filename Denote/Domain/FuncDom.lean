@@ -130,7 +130,7 @@ def curry' (f : A × B → C) [hcf : Continous f] : CFunc A (CFunc B C) where
       change _ = complete ((c.map mapper).map f) _
       rw [←this]
       change _ = f (complete (Function.const _ a) _, complete c _)
-      congr
+      congr 2
       exact complete_const.symm
   }⟩
   continous := {

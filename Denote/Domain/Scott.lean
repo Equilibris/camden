@@ -138,11 +138,16 @@ instance union (hs : Admissible f S) (ht : Admissible f T)
   hStab
     | x, .inl a => .inl <| hs.hStab x a
     | x, .inr a => .inr <| ht.hStab x a
-  hLub c hc holds :=
-    have hs := hs.hLub c hc
-    have ht := ht.hLub c hc
-    -- TODO
-    sorry
+  hLub c hc holds := by
+    apply (Set.mem_union _ _ _).mpr
+    rcases not_or_of_imp <| hs.hLub c hc with (hs|hs)
+    <;> rcases not_or_of_imp <| ht.hLub c hc with (ht|ht)
+    · push_neg at hs
+      push_neg at ht
+      sorry
+    · exact .inr ht
+    · exact .inl hs
+    · exact .inl hs
 
 instance inter {S : I → β → Prop} (h : ∀ x, Admissible f (S x))
     : Admissible f (∀ i, S i ·) where

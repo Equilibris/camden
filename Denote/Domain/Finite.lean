@@ -318,6 +318,35 @@ def C.Finite.ls_map
     (fda : c.Finite)
     : fdb.ls = (fda.ls.map f).dedup :=
   Subsingleton.allEq fdb (C.Finite.map hMono fda) ▸ rfl
+
+def C.Finite.complete_map
+    {α β}
+    [PartialOrder α]
+    [PartialOrder β]
+    {c : C α}
+    (f : α → β)
+    (fdb : (c.map f).Finite)
+    : ∃ n, fdb.ls.getLast (C.Finite.not_empty _) = f (c n) := by
+  have := Nat.sub_one_lt_of_lt <| List.length_pos_iff.mpr (C.Finite.not_empty fdb)
+  rw [←List.get_length_sub_one (this)]
+  obtain ⟨w, h⟩ :=
+    fdb.memAll 
+      (fdb.ls.get ⟨fdb.ls.length - 1, this⟩)
+      (List.get_mem fdb.ls ⟨fdb.ls.length - 1, this⟩)
+  use w
+  exact h.symm
+
+def FiniteDom.complete_map (hc : Chain c)
+    (f : α → β)
+    [Dom β]
+    [FiniteDom β]
+    (fmono : Monotone f)
+    : ∃ n : Nat, complete (c.map f) (Chain.map fmono)
+    = f (c n) := by
+  rw [FiniteDom.complete_last]
+  apply C.Finite.complete_map
+  /- C.Finite.complete_last c hc (fd.chain_fin c hc) -/
+
 end
 
 section
