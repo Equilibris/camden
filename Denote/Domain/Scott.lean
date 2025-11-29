@@ -10,7 +10,7 @@ class Ccss
     extends Dom α where
   toFun : α → β
   inj : Function.Injective toFun
-  embed : m.le (toFun a) (toFun b) ↔ le a b
+  embed : (toFun a) ≤ (toFun b) ↔ le a b
 
   contains_bot : toFun ⊥ = ⊥
   chain_closed (c : C α) hc : ∃ o, m.complete (c.map toFun) hc = toFun o
@@ -139,6 +139,7 @@ instance union (hs : Admissible f S) (ht : Admissible f T)
     | x, .inl a => .inl <| hs.hStab x a
     | x, .inr a => .inr <| ht.hStab x a
   hLub c hc holds := by
+    -- Take subchains
     apply (Set.mem_union _ _ _).mpr
     rcases not_or_of_imp <| hs.hLub c hc with (hs|hs)
     <;> rcases not_or_of_imp <| ht.hLub c hc with (ht|ht)

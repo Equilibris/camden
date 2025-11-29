@@ -24,8 +24,6 @@ instance : PartialOrder (PFun A B) where
     · simp only [← Option.ne_none_iff_exists', ne_eq, not_not] at ha hb
       exact ha.trans hb.symm
 
-#loogle Inf
-
 variable [DecidableEq B]
 instance : SemilatticeInf (PFun A B) where
   inf a b z := match a z, b z with

@@ -6,7 +6,7 @@ namespace Dom
 
 variable {A B C : _} [da : Dom A] [db : Dom B] [dc : Dom C]
 
-instance : Dom Unit where
+instance : Dom PUnit where
   bot_le | .unit => le_refl _
   complete _ _ := .unit
   complete_lub _ _ := {

@@ -19,6 +19,10 @@ instance {x : CFunc A B} : Continous x.f := x.continous
 
 instance : CoeFun (CFunc A B) (fun _ => A → B) := ⟨CFunc.f⟩
 
+@[ext]
+def ext : {f g : CFunc A B} → (h : f.f = g.f) → f = g
+  | ⟨_, _⟩, ⟨_, _⟩, rfl => rfl
+
 instance : PartialOrder (CFunc A B) where
   le a b := ∀ d, a d ≤ b d
   le_refl x v := le_refl _
@@ -54,13 +58,20 @@ instance : Dom (CFunc A B) where
       complete_least (c'.f v) fun n => hle n v
   }
 
-def fix (f : CFunc A A) : A := complete (Nat.repeat f · ⊥) ⟨p⟩
+def comp (bc : CFunc B C) (ab : CFunc A B) : CFunc A C where
+  f := bc.f ∘ ab.f
+  continous := by infer_instance
+
+@[simp]
+theorem comp_assoc [Dom D] (f : CFunc C D) (g : CFunc B C) (h : CFunc A B)
+    : (f.comp g).comp h = f.comp (g.comp h) := by rfl
+
+abbrev fix' (f : CFunc A A) : A := complete (Nat.repeat f · ⊥) ⟨p⟩
   where p | 0   => bot_le | n+1 => f.continous.mono (p n)
 
-instance fix_is_lpfp {f : CFunc A A} : LeastPreFixedPoint f.fix f.f where
+instance fix'_is_lpfp {f : CFunc A A} : LeastPreFixedPoint f.fix' f.f where
   fix := by
     let gen := (Nat.repeat f.f · ⊥)
-    dsimp [CFunc.fix]
     change f.f (complete gen _) ≤ complete gen _
     generalize_proofs p₁
     rw [f.continous.preserves_lubs gen p₁]
@@ -74,18 +85,18 @@ instance fix_is_lpfp {f : CFunc A A} : LeastPreFixedPoint f.fix f.f where
       (Nat.rec bot_le
         (fun _ ih ↦ le_trans (f.continous.mono ih) pfp.fix))
 
-def fix.mono : Monotone (fix : CFunc A A → A) := fun a b h =>
+theorem fix'.mono : Monotone (fix' : CFunc A A → A) := fun a b h =>
   complete_mono (Nat.rec bot_le
     (fun n ih =>
       le_trans
         (h (n.repeat a.f ⊥))
         (b.continous.mono ih)))
 
-def fix.chain_fix
+theorem fix'.chain_fix
     {c : Dom.C (CFunc A A)}
     [hc : Chain c]
     {p₁ : _}
-    : ∀ n₁, (c n₁).f (complete (c.map fix) p₁) ≤ (complete (c.map fix) p₁) := by
+    : ∀ n₁, (c n₁).f (complete (c.map fix') p₁) ≤ (complete (c.map fix') p₁) := by
   intro n₁
   rw [(c n₁).continous.preserves_lubs]
   apply complete_least
@@ -93,14 +104,14 @@ def fix.chain_fix
   unfold Dom.C.map Function.comp
   have := hc.le_lift _ <| Nat.le_add_left n₂ n₁
   -- Should be made into a calc block
-  apply le_trans ((c n₁).continous.mono <| fix.mono this)
-  apply le_trans <| (hc.le_lift _ <| Nat.le_add_right n₁ n₂) (c (n₁ + n₂)).fix
-  apply le_trans fix_is_lpfp.fix
-  exact complete_bound (c := fun n => (c n).fix) _
+  apply le_trans ((c n₁).continous.mono <| fix'.mono this)
+  apply le_trans <| (hc.le_lift _ <| Nat.le_add_right n₁ n₂) (c (n₁ + n₂)).fix'
+  apply le_trans fix'_is_lpfp.fix
+  exact complete_bound (c := fun n => (c n).fix') _
 
 open CFunc in
-instance : Continous.Helper (fix : CFunc A A → A) where
-  mono := fix.mono
+instance : Continous.Helper (fix' : CFunc A A → A) where
+  mono := fix'.mono
   preserves_lubs c hc := by
     apply complete_least
     intro n
@@ -108,18 +119,18 @@ instance : Continous.Helper (fix : CFunc A A → A) where
     induction n
     · exact bot_le
     case a.succ n ih =>
-      change _ ≤ complete (fix <| c ·) _
+      change _ ≤ complete (fix' <| c ·) _
       apply complete_least
       intro n₁
-      apply le_trans _ <| fix.chain_fix n₁
+      apply le_trans _ <| fix'.chain_fix n₁
       apply (c n₁).continous.mono
       exact ih
 
-def fix' : CFunc (CFunc A A) A where
-  f := fix
+def fix : CFunc (CFunc A A) A where
+  f := fix'
   continous := by infer_instance
 
-def curry' (f : A × B → C) [hcf : Continous f] : CFunc A (CFunc B C) where
+def curry (f : A × B → C) [hcf : Continous f] : CFunc A (CFunc B C) where
   f a := ⟨(f ⟨a, ·⟩), {
     mono := fun x y h => Continous.mono <| Prod.le_def.mpr ⟨le_refl _, h⟩,
     preserves_lubs := fun c hc => by
@@ -148,17 +159,9 @@ def curry' (f : A × B → C) [hcf : Continous f] : CFunc A (CFunc B C) where
       exact complete_const.symm,
   }
 
-def swap (a : CFunc (A × B) C) : CFunc (B × A) C where
-  f := a ∘ Prod.corec Prod.snd Prod.fst
-  continous := by infer_instance
+def mp' (f : CFunc A B × A) : B := f.fst f.snd
 
-def curry (f : CFunc (A × B) C) : CFunc A (CFunc B C) where
-  f := CFunc.curry' f
-  continous := by infer_instance
-
-def mp (f : CFunc A B × A) : B := f.fst f.snd
-
-instance : Continous (CFunc.mp (A := A) (B := B)) where
+instance : Continous (CFunc.mp' (A := A) (B := B)) where
   mono | ⟨f₁, v₁⟩, ⟨f₂, v₂⟩, h => have := Prod.le_def.mp h
       le_trans (this.left v₁) (f₂.continous.mono this.right)
   preserves_lubs c hc := by
@@ -190,21 +193,13 @@ instance : Continous (CFunc.mp (A := A) (B := B)) where
       apply le_trans <| this _
       exact complete_bound (c := fun n => (complete (fun x ↦ (c x).1) p₁) (c n).2) n
 
-def mp' :  CFunc (CFunc A B × A) B where
-  f := mp
+def mp :  CFunc (CFunc A B × A) B where
+  f := mp'
   continous := by infer_instance
 
 def id : CFunc A A where
   f := _root_.id
   continous := by infer_instance
-
-def comp (bc : CFunc B C) (ab : CFunc A B) : CFunc A C where
-  f := bc.f ∘ ab.f
-  continous := by infer_instance
-
-@[simp]
-theorem comp_assoc [Dom D] (f : CFunc C D) (g : CFunc B C) (h : CFunc A B)
-    : (f.comp g).comp h = f.comp (g.comp h) := by rfl
 
 def const (v : B) : CFunc A B where
   f := Function.const A v
@@ -226,6 +221,9 @@ def fst : CFunc (A × B) A where
 def snd : CFunc (A × B) B where
   f := Prod.snd
   continous := by infer_instance
+
+def swap (a : CFunc (A × B) C) : CFunc (B × A) C  :=
+  a.comp (.corecP .snd .fst)
 
 end Dom.CFunc
 
