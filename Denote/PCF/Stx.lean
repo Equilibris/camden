@@ -1,3 +1,5 @@
+import Denote.Utils
+
 namespace PCF
 
 universe u v
@@ -50,87 +52,6 @@ def Ty.arr.uex : Lean.PrettyPrinter.Unexpander
     `([ty| $a → $b])
   | _ => throw ()
 
-inductive Term' (rep : Ty → Type) : Ty → Type where
-  | var {t} : rep t → Term' rep t
-
-  | lam {A B} : (rep A → Term' rep B) → Term' rep (Ty.arr A B)
-  | app {A B} : Term' rep (.arr A B) → Term' rep A → Term' rep B
-
-  | true : Term' rep .bool
-  | false : Term' rep .bool
-  | ite {A}
-      : Term' rep .bool
-      → Term' rep A
-      → Term' rep A
-      → Term' rep A
-
-  | zero : Term' rep .nat
-  | succ : Term' rep .nat → Term' rep .nat 
-  | pred : Term' rep .nat → Term' rep .nat 
-
-  | z? : Term' rep .nat → Term' rep .bool
-
-  | fix {A} : Term' rep (.arr A A) → Term' rep A
-
-def Term (t : Ty) : Type 1 :=
-  {rep : Ty → Type} → Term' rep t
-
-namespace Term
-
-def var {t} : {rep : Ty → Type} → rep t → Term' rep t
-  | _, r => .var r
-
-def lam {A B} : (∀ {rep : Ty → Type}, rep A → Term B) → Term (.arr A B)
-  | f, _ => .lam (fun r => f r)
-
-def app {A B} : Term (.arr A B) → Term A → Term B
-  | f, v, _ => .app f v
-
-def true : Term .bool
-  | _ => .true
-
-def false : Term .bool
-  | _ => .false
-
-def ite {A} : Term .bool → Term A → Term A → Term A
-  | c, t, e, _ => .ite c t e
-
-def zero : Term .nat
-  | _ => .zero
-
-def succ : Term .nat → Term .nat
-  | v, _ => .succ v
-
-def pred : Term .nat → Term .nat
-  | v, _ => .pred v
-
-def z? : Term .nat → Term .bool
-  | v, _ => .z? v
-
-def fix {A} : Term (.arr A A) → Term A
-  | f, _ => .fix f
-
-end Term
-
-inductive _root_.List.MemT {A} : A → List A → Type
-  | hd {a as} : MemT a (a :: as)
-  | tl {bs a b} : MemT a bs → MemT a (b :: bs)
-
-def _root_.List.MemT.shift {l₁}
-    : {l₂ : List A}
-    → l₁.MemT a
-    → (l₂ ++ l₁).MemT a
-  | [], h => h
-  | _ :: _, h => .tl (shift h)
-
-def _root_.List.MemT.sandwitch_shift {l₁}
-    : {l l₂ : List A}
-    → (l ++ l₁).MemT a
-    → (l ++ (l₂ ++ l₁)).MemT a
-  | [],_, h => h.shift
-  | _ :: _, _, .hd => .hd
-  | _ :: _, _, .tl v => .tl v.sandwitch_shift
-
 inductive ITerm : List Ty → Ty → Type
   | var {ctx ty} : ctx.MemT ty → ITerm ctx ty
 
@@ -168,20 +89,8 @@ def gshift {Γ Γ₁ Γ₂} : ITerm (Γ ++ Γ₁) t → ITerm (Γ ++ (Γ₂ ++ �
 
 def shift {Γ₁} Γ₂ : ITerm Γ₁ t → ITerm (Γ₂ ++ Γ₁) t := gshift (Γ := [])
 
-inductive HList (f : A → Type) : List A → Type
-  | nil : HList f []
-  | cons {hd tl} : f hd → HList f tl → HList f (hd :: tl)
-
-def HList.get : {t Γ : _} → List.MemT t Γ → HList f Γ → f t 
-  | _, _ :: _, .hd, .cons h _ => h
-  | _, _ :: _, .tl v, .cons _ tl => tl.get v
-
-def HList.map {f g} (h : ∀ v, f v → g v) : HList f Γ → HList g Γ
-  | .nil => .nil
-  | .cons hd tl => .cons (h _ hd) $ tl.map h
-
 def parSubst (hList : HList (ITerm Γ') Γ) : ITerm Γ t → ITerm Γ' t
-  | .var h => hList.get h
+  | .var h => hList[h]
 
   | .pred v => .pred <| v.parSubst hList
   | .succ v => .succ <| v.parSubst hList
@@ -197,60 +106,5 @@ def parSubst (hList : HList (ITerm Γ') Γ) : ITerm Γ t → ITerm Γ' t
       <| v.parSubst
       <| .cons (.var .hd)
       <| hList.map
-      <| fun _ => shift [dom]
-
--- Instantiate var with depth-tracking
--- At each lambda, pass the current depth as the "variable"
-def Wf (depth : Nat) (ctx : List Ty) {ty : _} : Term' (fun _ => Nat) ty → Prop
-  | .var n => ctx[depth - n - 1]? = some ty  -- level → index lookup
-  | .true | .false | .zero => True
-  | .succ v | .z? v | .fix v | .pred v => Wf depth ctx v
-  | .lam (A := dom) body => Wf (depth + 1) (dom :: ctx) (body depth)
-  | .app f a       => Wf depth ctx f ∧ Wf depth ctx a
-  | .ite c t e => Wf depth ctx c ∧ Wf depth ctx t ∧ Wf depth ctx e
-
-instance Wf.dec {depth ctx ty} : {term : Term' _ ty} → Decidable (Wf depth ctx term)
-  | .var n => if h : _ = _ then .isTrue h else .isFalse h
-  | .true | .false | .zero => .isTrue .intro
-  | .succ v | .z? v | .fix v | .pred v => (Wf.dec : Decidable (Wf depth ctx v))
-  | .lam (A := dom) body => (Wf.dec : Decidable (Wf (depth+1) _ _))
-  | .app _ _ =>
-    match Wf.dec, Wf.dec with
-    | .isTrue h₁, .isTrue h₂ => .isTrue ⟨h₁, h₂⟩
-    | .isFalse h, _=> .isFalse <| not_and_of_not_or_not <| .inl h 
-    | _, .isFalse h => .isFalse <| not_and_of_not_or_not <| .inr h 
-  | .ite _ _ _ =>
-    match Wf.dec, Wf.dec, Wf.dec with
-    | .isTrue h₁, .isTrue h₂, .isTrue h₃ => .isTrue ⟨h₁, h₂, h₃⟩
-    | .isFalse h, _, _=> .isFalse <| not_and_of_not_or_not <| .inl h 
-    | _, .isFalse h, _ => .isFalse <| not_and_of_not_or_not <| .inr <| not_and_of_not_or_not <| .inl h
-    | _, _, .isFalse h => .isFalse <| not_and_of_not_or_not <| .inr <| not_and_of_not_or_not <| .inr h
-
-def listGetToMember : {ctx : List Ty} → {ty : Ty} → (n : Nat) → ctx[n]? = some ty → ctx.MemT ty
-  | [], _, n, h => by simp at h
-  | t :: ts, x, 0, h => cast (congr (congr rfl (by simpa using h)) rfl) .hd
-  | t :: ts, ty, n + 1, h => .tl (listGetToMember n h)
-
--- The actual transformation
-def ofWfTerm'
-    : {ctx : List Ty}
-    → {ty : Ty}
-    → (depth : Nat)
-    → (t : Term' (fun _ => Nat) ty)
-    → Wf depth ctx t
-    → ITerm ctx ty
-  | _, _, depth, .var n, h => .var (listGetToMember (depth - n - 1) h)
-  | _, _, depth, .lam body, h =>
-    .lam (ofWfTerm' (depth + 1) (body depth) h)
-  | _, _, depth, .app f a, h =>
-    .app (ofWfTerm' depth f h.1) (ofWfTerm' depth a h.2)
-  | _, _, _, .true, _ => .true
-  | _, _, _, .false, _ => .false
-  | _, _, depth, .ite c t e, h =>
-    .ite (ofWfTerm' depth c h.1) (ofWfTerm' depth t h.2.1) (ofWfTerm' depth e h.2.2)
-  | _, _, _, .zero, _ => .zero
-  | _, _, depth, .succ n, h => .succ (ofWfTerm' depth n h)
-  | _, _, depth, .pred n, h => .pred (ofWfTerm' depth n h)
-  | _, _, depth, .z? n, h => .z? (ofWfTerm' depth n h)
-  | _, _, depth, .fix f, h => .fix (ofWfTerm' depth f h)
+      <| shift [dom]
 

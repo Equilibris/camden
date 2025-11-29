@@ -1,4 +1,5 @@
 import Denote.PCF.Stx
+import Denote.PCF.Red
 import Denote.PCF.DenoteDefs
 import Denote.Domain.Flat
 import Denote.Domain.FuncDom

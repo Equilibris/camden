@@ -6,14 +6,12 @@ import Denote.PCF.Red
 
 open PCF Dom
 
-def Ωi Γ t : ITerm Γ t := .fix <| .lam <| .var <| .hd
-
 theorem Nat.repeat.id {x : Nat} : x.repeat id = (id : A → A) := by 
   induction x
   · rfl
   · simp_all only [Nat.repeat]; rfl
 
-theorem ex15 {Γ Δ} : (Ωi Γ t).denote Δ = ⊥ := by
+theorem ex15 {Γ Δ} : (Ω Γ t).denote Δ = ⊥ := by
   change complete (Nat.repeat id · ⊥) _ = ⊥
   conv => lhs; lhs; intro x; rw [Nat.repeat.id]; dsimp
   rw [complete_const]
