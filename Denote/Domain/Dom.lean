@@ -67,5 +67,14 @@ def complete_const' {d : α}
     : complete (Function.const _ d) (⟨fun _ => le_refl _⟩) = d :=
   Lub.allEq (complete_lub _ _) (Lub.const <| fun _ => rfl)
 
+theorem complete_contR
+    {c cskip : C α}
+    {hc hcskip : Chain _}
+    (hCont : ∀ n, c (n + a) = cskip n)
+    : complete c hc = complete cskip hcskip :=
+  Lub.allEq
+    (complete_lub _ _)
+    (Lub.contR (hc := hc) hCont (complete_lub _ _))
+
 end Dom
 

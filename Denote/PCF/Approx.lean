@@ -3,13 +3,6 @@ import Denote.PCF.Denote
 
 namespace PCF
 
-def ITerm.ofNat : (n : Nat) → ITerm Γ .nat
-  | 0 => .zero
-  | n+1 => .succ <|.ofNat n
-
-instance {Γ} {n : Nat} : OfNat (ITerm Γ .nat) n where
-  ofNat := ITerm.ofNat n
-
 def Approx : {t : Ty} → t.denote → ITerm [] t → Prop
   | .bool, .bot, _ | .nat, .bot, _ => True
   | .nat, .obj n, t => Red t (.ofNat n)

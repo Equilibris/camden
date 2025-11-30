@@ -4,13 +4,13 @@ import Denote.Domain.Chain
 
 namespace Dom
 
-variable [ida : PartialOrder α] {c : C α} {hc : Chain c}
+variable [ida : PartialOrder α] {c : C α}
 
 class Lub (c : C α) (lub : α) : Prop where
   lub_bound (n : Nat) : c n ≤ lub
   lub_least (x : α) : (∀ n, c n ≤ x) → lub ≤ x
 
-def Lub.allEq
+theorem Lub.allEq
     (ha : Lub c a)
     (hb : Lub c b)
     : a = b := by
@@ -27,7 +27,7 @@ instance : Subsingleton (PSigma (Lub c)) where
     obtain rfl := Lub.allEq ha hb
     rfl
 
-def Lub.mono
+theorem Lub.mono
     {dlub elub}
     {d e : C α}
     (h : ∀ n, d n ≤ e n)
@@ -39,7 +39,7 @@ def Lub.mono
       (h n)
       (helub.lub_bound n)
 
-def Lub.const
+theorem Lub.const
     (hSame : ∀ n, c n = d)
     : Lub c d where
   lub_bound := fun x => by rw [hSame]
@@ -49,7 +49,7 @@ def Lub.const
     rw [←hSame]
     exact h
 
-def Lub.contL {lub}
+theorem Lub.contL {lub}
     {cskip : C α} {hcskip : Chain cskip}
     (hCont : ∀ n, c n = cskip (n + a))
     (hlub : Lub cskip lub)
@@ -60,7 +60,9 @@ def Lub.contL {lub}
       apply ida.le_trans _ _ _ (hcskip.le_lift _ (Nat.le_add_right n a))
       rw [←hCont]
       exact h _
-def Lub.contR {lub}
+theorem Lub.contR
+    {hc : Chain c}
+    {lub}
     {cskip : C α}
     (hCont : ∀ n, c (n + a) = cskip n)
     (hlub : Lub cskip lub)

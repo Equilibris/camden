@@ -45,7 +45,7 @@ theorem sshift {Δ₁ : ctx_denote Γ₁}
   | _ :: _, _, ⟨_, _⟩, _, .hd => rfl
   | _ :: _, _, ⟨_, _⟩, _, .tl h => sshift h
 
-theorem gshift {Γ Γ₁ Γ₂} {Δ Δ₁ Δ₂ : ctx_denote.{u} _}
+theorem gshift {Γ Γ₁ Γ₂} {Δ Δ₁ Δ₂ : ctx_denote _}
     : {a : ITerm (Γ ++ Γ₁) t} 
     → (ITerm.gshift (Γ₂ := Γ₂) a).denote.f (.concat Δ (.concat Δ₂ Δ₁)) = a.denote (.concat Δ Δ₁)
   | .var v => by

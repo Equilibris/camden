@@ -20,11 +20,11 @@ def Ty.denote' : Ty → Sigma Dom
   | .nat => ⟨Dom.Flat Nat, inferInstance⟩
 
 @[simp]
-def Ty.denote : Ty → Type _ := Sigma.fst ∘ Ty.denote'
+def Ty.denote : Ty → Type 0 := Sigma.fst ∘ Ty.denote'
 
 instance {ty : Ty} : Dom ty.denote := ty.denote'.snd
 
-def ctx_denote : List Ty → Type _
+def ctx_denote : List Ty → Type 0
   | [] => PUnit
   | hd :: tl => ctx_denote tl × hd.denote
 
