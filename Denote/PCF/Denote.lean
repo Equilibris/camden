@@ -55,5 +55,16 @@ def ITerm.denote {ctx ty} : ITerm ctx ty → CFunc (ctx_denote ctx) ty.denote
 
 end
 
+theorem ITerm.ofNat_denote Γ : {n : _} → (ITerm.ofNat (Γ := Γ) n).denote = CFunc.const (.obj n)
+  | 0 => rfl
+  | n+1 => by
+    change succ.denote.comp (ofNat n).denote = _
+    rw [ITerm.ofNat_denote]
+    rfl
+
+theorem ITerm.ofBool_denote Γ : {n : _} → (ITerm.ofBool (Γ := Γ) n).denote = CFunc.const (.obj n)
+  | .false | .true => rfl
+
+
 end PCF
 

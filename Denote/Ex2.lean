@@ -16,7 +16,7 @@ theorem ex15 {Γ Δ} : (Ω Γ t).denote Δ = ⊥ := by
   conv => lhs; lhs; intro x; rw [Nat.repeat.id]; dsimp
   rw [complete_const]
 
-example {Γ Δ arg t} : (ITerm.lam (Ωi (arg :: Γ) t)).denote Δ = (Ωi _ _).denote Δ := by
+example {Γ Δ arg t} : (ITerm.lam (Ω (arg :: Γ) t)).denote Δ = (Ω _ _).denote Δ := by
   dsimp [ITerm.denote, CFunc.curry]
   conv => lhs; lhs; intro x; rw [ex15]
   rw [ex15]

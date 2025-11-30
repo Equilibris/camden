@@ -70,6 +70,7 @@ noncomputable def trace : CFunc α α where
 theorem fix_mem : f.fix = cs.toFun (trace cs).fix := by
   unfold CFunc.fix
   rw [(show Continous cs.toFun from by infer_instance).preserves_lubs]
+  simp [CFunc.fix']
   congr
   funext n
   induction n

@@ -47,4 +47,19 @@ def map {f g} (h : ∀ {v}, f v → g v) : HList f Γ → HList g Γ
   | .nil => .nil
   | .cons hd tl => .cons (h hd) <| tl.map h
 
+@[simp]
+def get_map {f g : A → Type}
+    {h : ∀ {v}, f v → g v}
+    : {ls : HList f Γ} → (i : List.MemT a Γ) → (ls.map h)[i] = h ls[i] 
+  | .cons _ _, .hd => rfl
+  | .cons hd tl, .tl h' => by 
+    change get h' (map h tl) = h tl[h']
+    exact get_map _
+
+@[simp]
+def get_map' {f g : A → Type}
+    {h : ∀ {v}, f v → g v}
+    : {ls : HList f Γ} → (i : List.MemT a Γ) → (ls.map h).get i = h ls[i] :=
+  get_map
+
 end HList

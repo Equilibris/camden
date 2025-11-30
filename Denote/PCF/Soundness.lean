@@ -58,6 +58,5 @@ theorem sound (e : ITerm [] t) : Red e v → e.denote .unit = v.denote .unit
     rw [sound _ flam, (sound _ val).symm.trans subst]
     rfl
 
-
 end PCF
 

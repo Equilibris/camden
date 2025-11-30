@@ -108,3 +108,35 @@ def parSubst (hList : HList (ITerm Γ') Γ) : ITerm Γ t → ITerm Γ' t
       <| hList.map
       <| shift [dom]
 
+def parSubst.noopL : {Γ : _} → HList (ITerm Γ) Γ
+  | [] => .nil
+  | _ :: _ => .cons (.var .hd) <| noopL.map <| shift [_]
+
+
+theorem parSubst.noopL_get
+    : {Γ : _}
+    → (h : List.MemT t Γ)
+    → (parSubst.noopL (Γ := Γ))[h] = var h 
+  | _ :: _, .hd => rfl
+  | _ :: _, .tl h => by 
+    change HList.get h (HList.map _ noopL) = var h.tl
+    rw [HList.get_map', parSubst.noopL_get]
+    cases h
+    · simp only [shift, gshift, List.cons_append, List.nil_append, List.MemT.sandwitch_shift, var.injEq]
+      rename_i as
+      cases as <;> rfl
+    · simp [shift, gshift, List.MemT.sandwitch_shift, List.MemT.shift]
+
+theorem parSubst.noop : {e : ITerm Γ t} → e.parSubst parSubst.noopL = e
+  | .var h => noopL_get h
+  | .app _ _
+  | .ite _ _ _ | .fix _ | .z? _ | .pred _ | .succ _ => by
+    dsimp [parSubst]
+    repeat rw [parSubst.noop]
+  | .zero | .false | .true => rfl
+  | .lam _ => by
+    change ITerm.lam (parSubst noopL _) = .lam _
+    rw [parSubst.noop]
+
+theorem parSubst.closed : {e : ITerm [] t} → e.parSubst .nil = e := parSubst.noop
+
