@@ -70,6 +70,9 @@ inductive Red : ITerm [] t → ITerm [] t → Prop
   | app : Red t' (.lam f) → Red (f.parSubst <| .cons u .nil) v → Red (.app t' u) v
   | fix : Red (.app t' (.fix t')) v → Red (.fix t') v
 
+def CtxEquiv {ty} (t t' : ITerm Γ ty) (γ : Ty) : Prop := 
+  ∀ C : ECtx Γ ty [] γ, ∀ v, Red (C t) v ↔ Red (C t') v
+
 theorem Red.rhs_Val (h : Red a b) : b.Val := by
   induction h
   any_goals assumption
@@ -80,9 +83,12 @@ theorem Red.rhs_Val (h : Red a b) : b.Val := by
 
 def Ω Γ t : ITerm Γ t := .fix <| .lam <| .var .hd
 
+theorem Ω.Div {t v} : Red (Ω [] t) v → False := sorry
+
 inductive SRed : ITerm [] t → ITerm [] t → Prop
-  | succ : SRed x Y → SRed (.succ x) (.succ Y)
+  | succ : SRed x y → SRed (.succ x) (.succ y)
   | pred : v.Val → SRed x (.succ v) → SRed (.pred x) v
+  | predc : SRed x x' → SRed (.pred x) (.pred x')
   | z?z : SRed (.z? .zero) .true
   | z?s : v.Val → SRed (.z? (.succ v)) .true
   | z?c : SRed x y → SRed (.z? x) (.z? y)
@@ -101,45 +107,62 @@ def BRed (a b : ITerm [] t) : Prop := RedStar a b ∧ b.Val
 
 #check Relation.ReflTransGen.rec
 
-inductive ReflTransGen' (r : α → α → Prop) : α → α → Prop
-  | refl : ReflTransGen' r a a
-  | head {b c} : r a b → ReflTransGen' r b c → ReflTransGen' r a c
-
-theorem ReflTransGen'.trans 
-    : {a b c : _}
-    → ReflTransGen' r a b
-    → ReflTransGen' r b c
-    → ReflTransGen' r a c
-  | _, _, _, .refl, h => h
-  | _, _, _, .head hd h, h' => .head hd (trans h h')
-
-def _root_.Relation.ReflTransGen.rec'
-    {α : Type u_1}
-    {r : α → α → Prop}
-    {c : α}
-    {motive : (a : α) → Relation.ReflTransGen r a c → Prop}
-    (hBase : motive c .refl)
-    (h : ∀ {a b : α}
-        (a_2 : r a b)
-        (a_1 : Relation.ReflTransGen r b c),
-        motive b a_1 →
-        motive a (.head a_2 a_1))
-    :  ∀ {a_1 : α} (t : Relation.ReflTransGen r a_1 c), motive a_1 t
-  | _, .refl => hBase
-  | _, .tail _ h' => by 
-    
-    apply h
-    · sorry
-    · sorry
-    · sorry
-    · sorry
-
-
+theorem SRed_Val : {a b : ITerm [] t} → SRed a b → b.Val → Red a b
+  | _,_, .succ hs, .succ h => Red.succ <| SRed_Val hs h
+  | _,_, .pred _ _, .succ _ => .pred sorry
+  | _,_, .pred _ _, .zero => .pred sorry
+  | _,_, .predc _, _ => sorry
+  | _,_, .z?z, _ => sorry
+  | _,_, .z?s v, _ => sorry
+  | _,_, .z?c _, _ => sorry
+  | _,_, .itet, _ => sorry
+  | _,_, .itef, _ => sorry
+  | _,_, .itec _, _ => sorry
+  | _,_, .appc _, _ => sorry
+  | _,_, .app, _ => sorry
+  | _,_, .fix, _ => sorry
+theorem Red_SRed {a b c : ITerm [] t} : SRed a b → Red b c → Red a c := by
+  intro s r
+  induction s
+  case succ => 
+    sorry
+  case pred => 
+    sorry
+  case predc => 
+    sorry
+  case z?z => 
+    sorry
+  case z?s => 
+    sorry
+  case z?c => 
+    sorry
+  · sorry
+  · sorry
+  · sorry
+  · sorry
+  · sorry
+  · sorry
 
 theorem BRed_Red {a b : ITerm [] t} (h : RedStar a b) (hv : b.Val) : Red a b := by
-  induction h using Relation.ReflTransGen.head_induction_on
+  dsimp [RedStar] at h
+  rw [Relation.reflTransGen_swap] at h
+  induction h
   · exact .val hv
-  · sorry
+  case tail b' c v s ih =>
+    clear v hv a
+    induction s
+    · sorry
+    · sorry
+    · sorry
+    · sorry
+    · sorry
+    · sorry
+    · sorry
+    · sorry
+    · sorry
+    · sorry
+    · sorry
+    · sorry
 
 end PCF
 

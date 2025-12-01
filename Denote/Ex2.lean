@@ -71,72 +71,71 @@ theorem FixF.eq {n m} : (FixF n m).denote .unit = FixF' (n.denote .unit) (m.deno
         cases n.denote.f PUnit.unit <;> rfl
       · simp [FixF', CFunc.fbind, Flat.bind]
         cases n.denote.f PUnit.unit <;> rfl
-  stop
-  apply le_antisymm
-  · change ∀ v : Flat Nat, _
-    apply Ccss.scott
-      (Φ := fun (x : CFunc (Flat Nat) (Flat Nat)) =>
-        ∀ v, x.f v ≤ (FixF' (n.denote.f PUnit.unit) (m.denote.f PUnit.unit)).f v)
-    constructor
-    · intro v
-      exact .bot
-    · rintro f ih (_|⟨(_|⟨(_|⟨n⟩)⟩)⟩)
-      <;> simp [Ty.denote.eq_1, Function.comp_apply, Ty.denote'.eq_1, Ty.denote'.eq_3, F,
-        ITerm.denote, CFunc.curry, CFunc.comp, ite.denote, z?.denote, proj, CFunc.snd, CFunc.fst,
-        CFunc.corecP, Prod.corec, z?.denote', ite.denote', pred.denote, pred.denote',
-        FixF', CFunc.fbind, Flat.bind, succ.denote, succ.denote', CFunc.mp, CFunc.mp']
-      · have := PCF.shift_denote
-          (a := m)
-          (Δ := (show ctx_denote [] from .unit))
-          [.nat, .arr .nat .nat] 
-          ⟨⟨.unit, f⟩, .obj 0⟩
-        dsimp [ctx_denote.concat] at this
-        rw [this]
-      · have := PCF.shift_denote
-          (a := n)
-          (Δ := (show ctx_denote [] from .unit))
-          [.nat, .arr .nat .nat] 
-          ⟨⟨.unit, f⟩, .obj 1⟩
-        dsimp [ctx_denote.concat] at this
-        rw [this]; clear this
-        cases n.denote.f PUnit.unit <;> rfl
-      · split
-        · rename_i v heq
-          specialize ih (.obj (n + 1))
-          rw [heq] at ih
-          dsimp [FixF', CFunc.fbind, Flat.bind] at ih
-          split at ih
-          <;> cases ih
-          rw [Nat.add_assoc]
-          rfl
-        · exact .bot
-    · exact fun c hc ih v => complete_least _ (ih · v)
-  · change ∀ v : Flat Nat, _
-    rintro (_|⟨w⟩)
-    · exact .bot
-    · induction w
-      · dsimp [FixF', CFunc.fbind, Flat.bind, FixF, ITerm.denote, CFunc.comp, CFunc.fix]
-        rw [←kleenes _ 1]
-        conv =>
-          rhs
-          lhs
-          dsimp [Nat.repeat]
-          lhs
-          simp only [F, ITerm.denote, CFunc.curry, Ty.denote'.eq_1, Ty.denote'.eq_3, Ty.denote.eq_1,
-            Function.comp_apply, CFunc.comp, ite.denote, CFunc.corecP, z?.denote, proj, CFunc.snd,
-            pred.denote, succ.denote, CFunc.mp, CFunc.fst, ite.denote', Prod.corec, z?.denote',
-            pred.denote', succ.denote', CFunc.mp', Nat.succ_eq_add_one]
-        dsimp
-        have := PCF.shift_denote
-          (a := m)
-          (Δ := (show ctx_denote [] from .unit))
-          [.nat, .arr .nat .nat] 
-          ⟨⟨.unit, ((F n m).denote.f PUnit.unit).fix'⟩, .obj 0⟩
-        dsimp [ctx_denote.concat] at this
-        rw [this]
-      case a.obj.succ ih => sorry
 
 end Ex2
+
+section Ex6
+
+variable (M₁ M₂ : ITerm Γ t)
+
+def s1 {ty} (t t' : ITerm Γ ty) : Prop :=
+  ∀ C : ECtx Γ ty [] .bool, (∃ v, Red (C t) v) ↔ (∃ v, Red (C t') v)
+
+def s2 {ty} (t t' : ITerm Γ ty) : Prop := 
+  ∀ C : ECtx Γ ty [] .bool, (Red (C t) .true) ↔ Red (C t') .true
+
+def s2' {ty} (t t' : ITerm Γ ty) : Prop :=
+  ∀ C : ECtx Γ ty [] .bool, (Red (C t) .false) ↔ Red (C t') .false
+
+theorem s1_imp_s2 (h : s1 M₁ M₂) : s2 M₁ M₂ := by
+  intro C
+  specialize h (.itec C .true (Ω _ _))
+  simp [ECtx.subst] at h
+  constructor
+  · intro h'
+    obtain ⟨w,r⟩ := h.mp ⟨.true, .itet h' <| .val .true⟩
+    cases r
+    <;> rename_i h
+    · cases h
+    · assumption
+    · exact False.elim (Ω.Div h)
+  · intro h'
+    obtain ⟨w,r⟩ := h.mpr ⟨.true, .itet h' <| .val .true⟩
+    cases r
+    <;> rename_i h
+    · cases h
+    · assumption
+    · exact False.elim (Ω.Div h)
+
+theorem s1_imp_s2' (h : s1 M₁ M₂) : s2' M₁ M₂ := by
+  intro C
+  specialize h (.itec C (Ω _ _) .true)
+  simp [ECtx.subst] at h ⊢
+  constructor
+  <;> intro h'
+  · obtain ⟨w,r⟩ := h.mp ⟨.true, .itef h' <| .val .true⟩
+    cases r
+    <;> rename_i h
+    · cases h
+    · exact False.elim (Ω.Div h)
+    · assumption
+  · obtain ⟨w,r⟩ := h.mpr ⟨.true, .itef h' <| .val .true⟩
+    cases r
+    <;> rename_i h
+    · cases h
+    · exact False.elim (Ω.Div h)
+    · assumption
+
+theorem s2_imp_CtxEquiv (h : s2 M₁ M₂) : CtxEquiv M₁ M₂ t := by
+  intro C v
+  dsimp
+  specialize h
+  constructor
+  <;> intro h'
+  · sorry
+  · sorry
+
+end Ex6
 
 section Ex15
 

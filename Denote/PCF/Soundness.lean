@@ -5,16 +5,6 @@ namespace PCF
 
 open Dom
 
-theorem ITerm.ofNat_denote Γ : {n : _} → (ITerm.ofNat (Γ := Γ) n).denote = CFunc.const (.obj n)
-  | 0 => rfl
-  | n+1 => by
-    change succ.denote.comp (ofNat n).denote = _
-    rw [ITerm.ofNat_denote]
-    rfl
-
-theorem ITerm.ofBool_denote Γ : {n : _} → (ITerm.ofBool (Γ := Γ) n).denote = CFunc.const (.obj n)
-  | .false | .true => rfl
-
 theorem sound (e : ITerm [] t) : Red e v → e.denote .unit = v.denote .unit
   | .val _ => rfl
   | .fix (t' := t') h => by

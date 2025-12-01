@@ -70,6 +70,45 @@ inductive ITerm : List Ty → Ty → Type
 
   | fix {ctx ty} : ITerm ctx (.arr ty ty) → ITerm ctx ty
 
+inductive ECtx Γ t : List Ty → Ty → Type
+  | hole : ECtx Γ t Γ t
+
+  | lam {dom ctx ran} : ECtx Γ t (dom :: ctx) ran → ECtx Γ t ctx (.arr dom ran)
+
+  | appl {ctx dom ran} : ECtx Γ t ctx (.arr dom ran) → ITerm ctx dom → ECtx Γ t ctx ran
+  | appr {ctx dom ran} : ITerm ctx (.arr dom ran) → ECtx Γ t ctx dom → ECtx Γ t ctx ran
+
+  | itec {ctx ty} : ECtx Γ t ctx .bool → ITerm ctx ty → ITerm ctx ty → ECtx Γ t ctx ty
+  | itet {ctx ty} : ITerm ctx .bool → ECtx Γ t ctx ty → ITerm ctx ty → ECtx Γ t ctx ty
+  | itef {ctx ty} : ITerm ctx .bool → ITerm ctx ty → ECtx Γ t ctx ty → ECtx Γ t ctx ty
+
+  | succ {ctx} : ECtx Γ t ctx .nat → ECtx Γ t ctx .nat
+  | pred {ctx} : ECtx Γ t ctx .nat → ECtx Γ t ctx .nat
+
+  | z? {ctx} : ECtx Γ t ctx .nat → ECtx Γ t ctx .bool
+
+  | fix {ctx ty} : ECtx Γ t ctx (.arr ty ty) → ECtx Γ t ctx ty
+
+namespace ECtx
+
+def subst (e : ITerm Γ t) : ECtx Γ t Γ' t' → ITerm Γ' t'
+  | .hole => e
+  | .fix v => .fix <| v.subst e
+  | .z? v => .z? <| v.subst e
+  | .pred v => .pred <| v.subst e
+  | .succ v => .succ <| v.subst e
+  | .itec c t f => .ite (c.subst e) t f
+  | .itet c t f =>  .ite c (t.subst e) f
+  | .itef c t f =>  .ite c t (f.subst e)
+  | .appr a b => .app a (b.subst e)
+  | .appl a b => .app (a.subst e) b
+  | .lam v => .lam <| v.subst e
+
+instance : CoeFun (ECtx Γ t Γ' t') fun _ => ITerm Γ t → ITerm Γ' t' where
+  coe e i := e.subst i
+
+end ECtx
+
 namespace ITerm
 
 def gshift {Γ Γ₁ Γ₂} : ITerm (Γ ++ Γ₁) t → ITerm (Γ ++ (Γ₂ ++ Γ₁)) t
