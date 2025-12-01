@@ -362,10 +362,11 @@ def _root_.List.getLast_writer
     getLast_writer (a := b :: t) (b := b :: t) rfl
 
 def Continous.finite
-    [DecidableEq E] [dd : FiniteDom D] [de : FiniteDom E]
+    [dd : FiniteDom D] [de : FiniteDom E]
     {f : D → E} (fmono : Monotone f) : Continous f where
   mono := fmono
   preserves_lubs c hc := by
+    have : DecidableEq E := Classical.decRel _
     have eq' := C.Finite.ls_map f fmono (de.chain_fin _ (hc.map fmono)) (dd.chain_fin c hc)
     rw [FiniteDom.complete_eq_chain_fin, FiniteDom.complete_eq_chain_fin, List.getLast_writer eq']
     unfold List.dedup

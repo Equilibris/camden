@@ -54,14 +54,14 @@ theorem obj_a_le_obj_b_eq {a b : α} : (Flat.obj a ≤ .obj b) = (a = b) := by
   · rintro (_|_); rfl
   · rintro rfl; rfl
 
-@[simp, grind =]
+@[simp]
 theorem obj_a_le_bot {a : α} : (Flat.obj a ≤ .bot) = False := by
   apply propext
   constructor
   · rintro (_|_)
   · exact False.elim
 
-@[simp, grind =]
+@[simp]
 theorem obj_le_eq {v} : {f : Flat α} → (.obj v ≤ f) = (.obj v = f)
   | .obj _  => by simp
   | .bot    => by simp
@@ -140,6 +140,51 @@ noncomputable instance : Continous (Flat.domainLift f : Flat A → Flat B) :=
   Continous.finite Flat.domainLift.mono
 
 noncomputable instance : StrictContinous (Flat.domainLift f : Flat A → Flat B) := ⟨rfl⟩
+
+namespace Flat
+
+section FlatMonad
+
+@[grind]
+def bind (v : Flat A) (f : (A → Flat B)) : Flat B :=
+  match v with
+  | .obj v => f v
+  | .bot => .bot
+
+theorem bind.mono : Monotone (domainLift f)
+  | .obj _, .obj _, .obj_obj => by
+    dsimp [Flat.domainLift]
+    split
+    · exact .obj_obj
+    · exact .bot_bot
+  | .bot,   .obj _,  .bot_obj => by
+    dsimp [Flat.domainLift]
+    split
+    · exact .bot_obj
+    · exact .bot_bot
+  | .bot,   .bot,    .bot_bot => .bot_bot
+
+noncomputable instance : Continous (Flat.domainLift f : Flat A → Flat B) :=
+  Continous.finite Flat.domainLift.mono
+
+instance : Monad Flat where
+  bind := bind
+  pure := .obj
+
+instance : LawfulMonad Flat where
+  bind_assoc {A B C} := by rintro (_|_) f g <;> rfl
+  map_const := rfl
+  id_map := fun | .bot | .obj _ => rfl
+  seqLeft_eq := fun | .bot, .bot | .bot, .obj _ | .obj _, .bot | .obj _, .obj _ => rfl
+  seqRight_eq := fun | .bot, .bot | .bot, .obj _ | .obj _, .bot | .obj _, .obj _ => rfl
+  pure_seq g := fun | .bot | .obj _ => rfl
+  bind_pure_comp f := fun | .bot | .obj _ => rfl
+  bind_map v := fun | .bot | .obj _ => rfl
+  pure_bind x f := rfl
+
+end FlatMonad
+
+end Flat
 
 end Dom
 

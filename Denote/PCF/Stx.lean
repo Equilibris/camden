@@ -112,7 +112,6 @@ def parSubst.noopL : {Γ : _} → HList (ITerm Γ) Γ
   | [] => .nil
   | _ :: _ => .cons (.var .hd) <| noopL.map <| shift [_]
 
-
 theorem parSubst.noopL_get
     : {Γ : _}
     → (h : List.MemT t Γ)

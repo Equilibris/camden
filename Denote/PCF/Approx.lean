@@ -51,11 +51,10 @@ theorem red_respects
   | .bool, .obj .false, _, _, map, h
   | .nat, .obj _, _, _, map, h => map _ h
   | .arr Dom Ren, d, e, e', map, h =>
-    fun d' ex h' => red_respects (by
-        intro v h
-        rcases h with ((_|_)|_)
-        rename_i f h h'
-        refine .app (map _ h) h'
+    fun d' ex h' => red_respects 
+      (fun v => by
+        rintro ((_|_)|_)
+        exact .app (map _ ‹Red e (.lam _)›) ‹Red (parSubst (HList.cons ex HList.nil) _) v›
       ) (h d' ex h')
 
 #check Dom.Ccss

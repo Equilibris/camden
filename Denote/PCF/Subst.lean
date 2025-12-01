@@ -67,10 +67,18 @@ theorem gshift {Γ Γ₁ Γ₂} {Δ Δ₁ Δ₂ : ctx_denote _}
     funext v
     exact gshift (Γ := dom :: Γ) (Δ := ⟨Δ,v⟩)
 
+@[simp]
 theorem shift1 {Γ₁} {Δ : ctx_denote _}
     {a : ITerm Γ₁ t}
     : (ITerm.shift [t₂] a).denote.f (Δ, v) = a.denote Δ :=
   @gshift t [] Γ₁ [t₂] .unit Δ ⟨.unit, v⟩ a
+
+@[simp]
+theorem shift_denote {Γ₁} Γ₂ {Δ : ctx_denote _}
+    (Δ₂ : ctx_denote _)
+    {a : ITerm Γ₁ t}
+    : (ITerm.shift Γ₂ a).denote.f (.concat Δ₂ Δ) = a.denote Δ :=
+  @gshift t [] Γ₁ Γ₂ .unit Δ Δ₂ a
 
 theorem deepApply_denote
     (Δ : ctx_denote Γ₂)

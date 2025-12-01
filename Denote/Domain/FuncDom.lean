@@ -4,6 +4,7 @@ import Denote.Domain.ChainTrellis
 import Denote.Domain.Continous
 import Denote.Domain.ProdDom
 import Denote.Domain.FixedPoint
+import Denote.Domain.Flat
 
 namespace Dom
 
@@ -224,6 +225,13 @@ def snd : CFunc (A × B) B where
 
 def swap (a : CFunc (A × B) C) : CFunc (B × A) C  :=
   a.comp (.corecP .snd .fst)
+
+def fbind (f : A → Flat B) : CFunc (Flat A) (Flat B) where
+  f v := Flat.bind v f
+  continous := Continous.finite fun
+    | .bot, .bot, .bot_bot => .bot_bot
+    | .bot, .obj _, .bot_obj => .bot
+    | .obj _, .obj _, .obj_obj => le_refl _
 
 end Dom.CFunc
 
