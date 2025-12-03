@@ -137,6 +137,16 @@ theorem s2_imp_CtxEquiv (h : s2 M₁ M₂) : CtxEquiv M₁ M₂ t := by
 
 end Ex6
 
+section Ex8
+
+/-
+
+This generalisies from a binary por to a complete por.
+
+-/
+
+end Ex8
+
 section Ex15
 
 theorem Nat.repeat.id {x : Nat} : x.repeat id = (id : A → A) := by 
@@ -159,8 +169,19 @@ end Ex15
 
 section Ex17
 
-
+example {t₁ t₂ : ITerm [] t} : ∀ v, (Red t₁ v ↔ Red t₂ v) → CtxEquiv t₁ t₂ τ := by
+  intro v h' C v'
+  dsimp
+  refine ⟨fun h => ?_, fun h => ?_⟩
+  · sorry
+  · sorry
 
 end Ex17
 
+section Ex19
+
+-- We can prove it for ground types using adequecy, 
+-- function types dont hold. Consider λ x ↦ x and λ x ↦ (λ x ↦ x) x
+
+end Ex19
 
