@@ -92,15 +92,13 @@ theorem s1_imp_s2 (h : s1 M₁ M₂) : s2 M₁ M₂ := by
   specialize h (.itec C .true (Ω _ _))
   simp [ECtx.subst] at h
   constructor
-  · intro h'
-    obtain ⟨w,r⟩ := h.mp ⟨.true, .itet h' <| .val .true⟩
-    cases r
-    <;> rename_i h
+  <;> intro h'
+  · obtain ⟨w,r⟩ := h.mp ⟨.true, .itet h' <| .val .true⟩
+    cases r <;> rename_i h
     · cases h
     · assumption
     · exact False.elim (Ω.Div h)
-  · intro h'
-    obtain ⟨w,r⟩ := h.mpr ⟨.true, .itet h' <| .val .true⟩
+  · obtain ⟨w,r⟩ := h.mpr ⟨.true, .itet h' <| .val .true⟩
     cases r
     <;> rename_i h
     · cases h
@@ -127,11 +125,8 @@ theorem s1_imp_s2' (h : s1 M₁ M₂) : s2' M₁ M₂ := by
     · assumption
 
 theorem s2_imp_CtxEquiv (h : s2 M₁ M₂) : CtxEquiv M₁ M₂ t := by
-  intro C v
-  dsimp
-  specialize h
-  constructor
-  <;> intro h'
+  induction t
+  · sorry
   · sorry
   · sorry
 
@@ -141,8 +136,12 @@ section Ex8
 
 /-
 
-This generalisies from a binary por to a complete por.
+This generalisies from a binary por to a countable por.
 
+⟦fix M⟧ = fun P : ℕ⊥ → 𝔹⊥ ↦
+  if ∃ v, P v ≠ ⊥ then
+    if ∃ v, P v = .true then .true else .false
+  else ⊥
 -/
 
 end Ex8

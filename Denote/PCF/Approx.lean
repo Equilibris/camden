@@ -51,7 +51,7 @@ theorem red_respects
   | .bool, .obj .false, _, _, map, h
   | .nat, .obj _, _, _, map, h => map _ h
   | .arr Dom Ren, d, e, e', map, h =>
-    fun d' ex h' => red_respects 
+    fun d' ex h' => red_respects
       (fun v => by
         rintro ((_|_)|_)
         exact .app (map _ ‹Red e (.lam _)›) ‹Red (parSubst (HList.cons ex HList.nil) _) v›
@@ -92,14 +92,17 @@ theorem fund : (e : ITerm Γ t) → (ρ σ : _) → CtxApprox ρ σ → (e.parSu
     cases v
     · exact .bot
     · exact Red.succ this
-  | .ite e _ _, ctx, _, h => by
+  | .ite e _ _, ctx, ctxv, h => by
     dsimp [Prod.corec, CFunc.corecP, ite.denote, CFunc.comp, ITerm.Approx, ITerm.denote, CFunc.const, ITerm.parSubst]
     have := fund e ‹_› ‹_› h
     generalize e.denote.f ctx = v at this
     rcases v with (_|_|_)
     <;> dsimp [ITerm.Approx, ite.denote'] at this ⊢
     · exact .bot
-    · unfold ITerm.Approx
+    · have := fund _ ctx
+      apply ITerm.Approx.red_respects
+      sorry
+      sorry
       sorry
     · sorry
   | .app _ _, _, _, _ => sorry

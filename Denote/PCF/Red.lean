@@ -302,18 +302,18 @@ theorem Red_BRed {a b : ITerm [] t} (h : Red a b) : RedStar a b := by
   case fix ih =>
     exact .tail ih (.fix)
 
-theorem ECtx.subst_SRed {a b : ITerm [] t'} : {t : _} → {C : ECtx [] t' [] t} → SRed a b → Red (C a) v → Red (C b) v
-  | _, .succ hs => sorry
-  | _, .pred h => sorry
-  | _, .itec _ => sorry
-  | _, .z?c _ => sorry
-  | _, .fix => sorry
-  | _, .appc _ => sorry
-  | _, .predc _ => sorry
-  | _, .z?z => sorry
-  | _, .z?s v => sorry
-  | _, .itet => sorry
-  | _, .itef => sorry
-  | _, .app => sorry
+/- theorem ECtx.subst_SRed {a b : ITerm [] t'} : {t : _} → {C : ECtx [] t' [] t} → SRed a b → Red (C a) v → Red (C b) v -/
+/-   | _, .succ hs => sorry -/
+/-   | _, .pred h => sorry -/
+/-   | _, .itec _ => sorry -/
+/-   | _, .z?c _ => sorry -/
+/-   | _, .fix => sorry -/
+/-   | _, .appc _ => sorry -/
+/-   | _, .predc _ => sorry -/
+/-   | _, .z?z => sorry -/
+/-   | _, .z?s v => sorry -/
+/-   | _, .itet => sorry -/
+/-   | _, .itef => sorry -/
+/-   | _, .app => sorry -/
 
 end PCF
