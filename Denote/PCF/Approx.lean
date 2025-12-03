@@ -1,5 +1,6 @@
 import Denote.PCF.Red
 import Denote.PCF.Denote
+import Denote.PCF.Subst
 import Denote.Domain.Scott
 
 namespace PCF
@@ -92,21 +93,34 @@ theorem fund : (e : ITerm Γ t) → (ρ σ : _) → CtxApprox ρ σ → (e.parSu
     cases v
     · exact .bot
     · exact Red.succ this
-  | .ite e _ _, ctx, ctxv, h => by
-    dsimp [Prod.corec, CFunc.corecP, ite.denote, CFunc.comp, ITerm.Approx, ITerm.denote, CFunc.const, ITerm.parSubst]
-    have := fund e ‹_› ‹_› h
-    generalize e.denote.f ctx = v at this
+  | .ite e t f, ctx, ctxv, h => by
+    dsimp only [Ty.denote.eq_1, Function.comp_apply, ITerm.denote, CFunc.comp, ite.denote,
+      CFunc.corecP, Prod.corec, ITerm.parSubst]
+    have he := fund e ‹_› ‹_› h
+    have ht := fund t ‹_› ‹_› h
+    have hf := fund f ‹_› ‹_› h
+    generalize e.denote.f ctx = v at he
     rcases v with (_|_|_)
-    <;> dsimp [ITerm.Approx, ite.denote'] at this ⊢
+    <;> dsimp [ITerm.Approx, ite.denote'] at he ⊢
     · exact .bot
-    · have := fund _ ctx
-      apply ITerm.Approx.red_respects
-      sorry
-      sorry
-      sorry
-    · sorry
+    · apply ITerm.Approx.red_respects _ hf
+      intro v h
+      apply Red.itef he h
+    · apply ITerm.Approx.red_respects _ ht
+      intro v h
+      apply Red.itet he h
   | .app _ _, _, _, _ => sorry
-  | .lam _, _, _, _ => sorry
+  | .lam b, ctx, ctxv, h => by
+    intro d d' apx
+    have := fund b (ctx, d) (.cons d' ctxv) ⟨apx, h⟩
+    #check subst
+    apply ITerm.Approx.red_respects _ this
+    intro v h
+    dsimp [ITerm.parSubst]
+    apply Red.app _
+    · sorry
+    · sorry
+    · sorry
 
 theorem adeq_n {t : ITerm [] .nat}
     (h : t.denote .unit = (ITerm.ofNat (Γ := []) n).denote .unit)

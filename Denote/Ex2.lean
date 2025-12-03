@@ -124,8 +124,17 @@ theorem s1_imp_s2' (h : s1 M₁ M₂) : s2' M₁ M₂ := by
     · exact False.elim (Ω.Div h)
     · assumption
 
-theorem s2_imp_CtxEquiv (h : s2 M₁ M₂) : CtxEquiv M₁ M₂ t := by
-  induction t
+theorem s2_imp_CtxEquiv {t} (h : s2 M₁ M₂) : CtxEquiv M₁ M₂ t := by
+  intro C
+  cases C
+  · sorry
+  · sorry
+  · sorry
+  · sorry
+  · sorry
+  · sorry
+  · sorry
+  · sorry
   · sorry
   · sorry
   · sorry
